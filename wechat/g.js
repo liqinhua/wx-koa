@@ -10,7 +10,7 @@ module.exports = function (opts) { // 加密认证中间件
 	// var wechat = new Wechat(opts) // 实例化构造函数
 
 	return function *(next) {
-		console.log(this.query)
+		// console.log(this.query)
 		var token = opts.token
 		var signature = this.query.signature // 签名
 		var nonce = this.query.nonce // 随机数
@@ -19,7 +19,7 @@ module.exports = function (opts) { // 加密认证中间件
 		var str = [token, timestamp, nonce].sort().join('')
 		var sha = sha1(str)
 
-		console.log(this.method)
+		// console.log(this.method)
 		if (this.method === 'GET') {
 			if (sha === signature) {
 				this.body = echostr + ''
@@ -40,7 +40,13 @@ module.exports = function (opts) { // 加密认证中间件
 			})
 
 			var content = yield util.parseXMLAsync(data)
+			console.log('789')
 			console.log(content)
+
+			var message = util.formatMessage(content.xml)
+
+			console.log('haha')
+			console.log(message)
 		}
 	}
 }
