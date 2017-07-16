@@ -5,6 +5,7 @@ var getRawBody = require('raw-body')
 // var Wechat = require('./Wechat')
 
 module.exports = function (opts) { // 加密认证中间件
+	// 为了检验，屏蔽看，如果关注能收到推送过来，就表明成功了
 	// var wechat = new Wechat(opts) // 实例化构造函数
 
 	return function *(next) {
