@@ -10,6 +10,7 @@ module.exports = function (opts) { // 加密认证中间件
 	// var wechat = new Wechat(opts) // 实例化构造函数
 
 	return function *(next) {
+		var that = this
 		// console.log(this.query)
 		var token = opts.token
 		var signature = this.query.signature // 签名
@@ -47,6 +48,26 @@ module.exports = function (opts) { // 加密认证中间件
 
 			console.log('haha')
 			console.log(message)
+
+			if (message.MsgType === 'event') {
+				if (message.Event === 'subscribe') {
+					var now = new Date().getTime()
+
+					that.status = 200
+					that.type = 'application/xml'
+					var reply = '<xml>' + 
+						'<ToUserName><![CDATA[' + message.FromUserName +']]></ToUserName>' + 
+						'<FromUserName><![CDATA[' + message.ToUserName + ']]></FromUserName>' + 
+						'<CreateTime>' + now + '</CreateTime>' + 
+						'<MsgType><![CDATA[text]]></MsgType>' + 
+						'<Content><![CDATA[' + '小华测试公众号关注回调事件' + ']]></Content>' + 
+						'</xml>'
+					console.log(reply)
+					this.body = reply
+
+					return
+				}
+			}
 		}
 	}
 }
