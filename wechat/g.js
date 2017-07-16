@@ -2,7 +2,8 @@
 
 var sha1 = require('sha1') // 加密
 var getRawBody = require('raw-body')
-// var Wechat = require('./Wechat')
+var Wechat = require('./Wechat')
+var util = require('./util')
 
 module.exports = function (opts) { // 加密认证中间件
 	// 为了检验，屏蔽看，如果关注能收到推送过来，就表明成功了
@@ -38,7 +39,8 @@ module.exports = function (opts) { // 加密认证中间件
 				encoding: this.charset
 			})
 
-			console.log(data.toString())
+			var content = yield util.parseXMLAsync(data)
+			console.log(content)
 		}
 	}
 }
