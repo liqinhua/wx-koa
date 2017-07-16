@@ -1,85 +1,11 @@
 'use strict' // 严格模式
+
 var sha1 = require('sha1') // 加密
-var Promise = require('bluebird')
-var request = Promise.promisify(require('request')) // 一个请求库，通过promisify化而已
-var prefix = 'https://api.weixin.qq.com/cgi-bin/'
-var api = {
-	accessToken: prefix + 'token?grant_type=client_credential'
-}
-
-function Wechat(opts) {
-	var that = this
-	this.appID = opts.appId
-	this.appSecret = opts.appSecret
-	this.getAccessToken = opts.getAccessToken // 获取
-	this.saveAccessToken = opts.saveAccessToken // 存储
-
-	this.getAccessToken()
-		.then(function(data) {
-			try {
-				data = JSON.parse(data)
-			}
-			catch(e) {
-				return that.updateAccessToken(data) // 更新票据
-			}
-
-			if (that.isValidAccessToken(data)) { // 检测票据
-				Promise.resolve(data)
-			}
-			else {
-				return that.updateAccessToken
-			}
-		})
-		.then(function(data) {
-			that.access_token = 'data.access_token'
-			that.expires_in = 'data.expires_in'
-
-			that.saveAccessToken(data)
-		})
-}
-
-Wechat.prototype.isValidAccessToken = function(data) {
-	if (!data || !data.access_token || !data.expires_in) {
-		return false
-	}
-
-	var access_token = data.access_token
-	var expires_in = data.expires_in // 过期时间
-	var now = (new Date().getTime())
-
-	if (now < expires_in) {
-		return true
-	}
-	else {
-		return false
-	}
-}
-
-Wechat.prototype.updateAccessToken = function () { // 更新票据
-	// console.log(this.appSecret)
-	var appID = this.appID
-	var appSecret = this.appSecret
-	var url = api.accessToken + '&appid=' + appID + '&secret=' + appSecret
-
-	return new Promise(function(resolve, reject) {
-		request({url: url, json: true}).then(function(response) {
-			// console.log(response)
-			// var data = response[1]
-			var data = response.body
-			// console.log(response)
-			// console.log(response.body)
-			var now = (new Date().getTime())
-			var expires_in = now + (data.expires_in - 20) * 1000
-
-			data.expires_in = expires_in
-
-			resolve(data)
-		})
-	})
-}
+var getRawBody = require('raw-body')
+// var Wechat = require('./Wechat')
 
 module.exports = function (opts) { // 加密认证中间件
-	var wechat = new Wechat(opts) // 实例化构造函数
+	// var wechat = new Wechat(opts) // 实例化构造函数
 
 	return function *(next) {
 		console.log(this.query)
@@ -91,10 +17,27 @@ module.exports = function (opts) { // 加密认证中间件
 		var str = [token, timestamp, nonce].sort().join('')
 		var sha = sha1(str)
 
-		if (sha === signature) {
-			this.body = echostr + ''
-		} else {
-			this.body = 'wrong'
+		console.log(this.method)
+		if (this.method === 'GET') {
+			if (sha === signature) {
+				this.body = echostr + ''
+			} else {
+				this.body = 'wrong'
+			}
+		}
+		else if (this.method === 'POST') {
+			if (sha !== signature) {
+				this.body = 'wrong789'
+				return false
+			}
+
+			var data = yield getRawBody(this.req, {
+				length: this.length,
+				limit: '1mb',
+				encoding: this.charset
+			})
+
+			console.log(data.toString())
 		}
 	}
 }

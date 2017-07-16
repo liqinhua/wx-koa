@@ -22,14 +22,14 @@ var config = {
 
 var app = new Koa()
 
-app.use(function *(next) {
-	console.log(this.url)
-	if (this.url.indexOf('/movie') > -1) {
-		this.body = '<h1>nihao</h1>'
-		return next
-	}
-	yield next
-}) 
+// app.use(function *(next) {
+// 	console.log(this.url)
+// 	if (this.url.indexOf('/movie') > -1) {
+// 		this.body = '<h1>nihao</h1>'
+// 		return next
+// 	}
+// 	yield next
+// }) 
 
 app.use(wechat(config.wechat))
 
